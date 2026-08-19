@@ -32,6 +32,14 @@ blog-1121 リライト記事ドラフト v1（2026-08-15作成）
 ・WP入稿時は <div class="blog_detail_main_body"> の中身だけをWPエディタへ移植すること
   （ヘッダー/フッター/MV/パンくず/タイトル部はテーマが自動出力するため貼り付け不要）
 ・SPメニュー開閉などのJSは含まないため、モバイル表示のメニューボタンは動作しない（プレビュー用）
+
+【2026-08-19更新③：追従目次・追従CTA】
+・PC広幅（1240px以上）で3カラム表示: 左＝追従目次（sticky）／中央＝本文／右＝追従CTA（パターン6サイドカード、sticky）
+・目次は本文のh2からJSで自動生成し、スクロールに応じて現在地をハイライト。クリックでスムーズスクロール
+・モバイル（880px以下）は300pxスクロールで下部固定CTAバー（パターン6）を表示
+・1240px未満のPC/タブレットではレールを非表示（本文中のインラインCTAでカバー）
+・WP実装時の注記: 目次はez-toc（テーマの js-sidebar-toc-target 連携）、追従CTAはテーマの
+  blog_detail_side スロットまたは本実装のCSS/JS移植で対応。本文入稿範囲は変わらず blog_detail_main_body の中身のみ
 ・FAQPageのJSON-LDを末尾に同梱。WPではカスタムHTMLブロック等で挿入する
 
 【公開前の目視確認リスト（fact-checker指摘・2026-08-15）】
@@ -93,6 +101,36 @@ blog-1121 リライト記事ドラフト v1（2026-08-15作成）
   .cta-step.b a:hover { filter:brightness(.94); }
   .cta-next .micro { font-size:.78rem; color:var(--cta-muted); text-align:center; margin:1em 0 0; }
   @media (max-width:560px) { .cta-steps { grid-template-columns:1fr; } }
+  /* ===== 追従レール（左:目次／右:CTA）。PC広幅のみ表示 ===== */
+  html { scroll-behavior: smooth; }
+  .blog_detail_main_body h2 { scroll-margin-top: 130px; }
+  .toc-rail, .cta-rail { display: none; }
+  @media (min-width: 1240px) {
+    .blog_detail_body_wrap { display: grid; grid-template-columns: 230px minmax(0, 820px) 280px; gap: clamp(16px, 2vw, 40px); justify-content: center; padding: 0 16px; }
+    .blog_detail_body_wrap .blog_detail_main .inner { width: auto; max-width: 820px; margin: 0 auto; }
+    .toc-rail, .cta-rail { display: block; position: sticky; top: 130px; align-self: start; margin-top: 30px; }
+  }
+  .toc-box { background: #fff; border: 1px solid var(--cta-line); border-radius: 12px; padding: 16px 14px; max-height: calc(100vh - 170px); overflow-y: auto; }
+  .toc-box .toc-ttl { font-weight: 700; font-size: .95rem; margin: 0 0 .6em; padding-bottom: .4em; border-bottom: 2px solid #E5E5E5; }
+  .toc-box ol { list-style: none; margin: 0; padding: 0; }
+  .toc-box li { margin: 0; }
+  .toc-box a { display: block; font-size: .82rem; line-height: 1.5; color: #212121; text-decoration: none; padding: .45em .6em .45em .8em; border-left: 3px solid transparent; }
+  .toc-box a:hover { color: var(--cta-primary-dark); background: var(--cta-soft); }
+  .toc-box a.is-active { color: var(--cta-primary-dark); font-weight: 700; border-left-color: var(--cta-primary); background: var(--cta-soft); }
+  .cta-sticky { background: var(--cta-soft); border: 1px solid var(--cta-line); border-radius: 14px; padding: 18px; box-shadow: 0 6px 22px rgba(20,60,40,.10); }
+  .cta-sticky .t { font-weight: 800; font-size: 1rem; margin: 0 0 .5em; }
+  .cta-sticky .d { font-size: .82rem; color: var(--cta-muted); margin: 0 0 1em; }
+  .cta-sticky a { display: block; text-align: center; font-weight: 700; text-decoration: none; border-radius: 8px; padding: .8em 1em; margin-bottom: 8px; }
+  .cta-sticky .p { background: var(--cta-primary); color: #fff; }
+  .cta-sticky .p:hover { background: var(--cta-primary-dark); }
+  .cta-sticky .o { background: #fff; color: var(--cta-primary-dark); border: 2px solid var(--cta-primary); }
+  .cta-sticky .micro { font-size: .74rem; color: var(--cta-muted); margin: .6em 0 0; }
+  /* モバイル: 下部固定CTAバー（一定スクロールで表示） */
+  .cta-bottombar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 150; display: none; gap: 8px; padding: 10px 12px calc(10px + env(safe-area-inset-bottom)); background: rgba(255,255,255,.97); border-top: 1px solid var(--cta-line); box-shadow: 0 -4px 18px rgba(20,60,40,.12); }
+  .cta-bottombar a { flex: 1 1 0; text-align: center; font-weight: 700; text-decoration: none; border-radius: 9px; padding: .85em .5em; font-size: .92rem; }
+  .cta-bottombar .p { background: var(--cta-primary); color: #fff; }
+  .cta-bottombar .o { background: #fff; color: var(--cta-primary-dark); border: 2px solid var(--cta-primary); }
+  @media (max-width: 880px) { .cta-bottombar.show { display: flex; } }
 </style>
 </head>
 <body class="body">
@@ -239,6 +277,15 @@ blog-1121 リライト記事ドラフト v1（2026-08-15作成）
   </nav>
 
 <div class="blog_detail_body_wrap">
+
+  <!-- ▼ 左レール: 追従目次（PC広幅のみ表示。JSでh2から自動生成） ▼ -->
+  <aside class="toc-rail" aria-label="目次">
+    <nav class="toc-box">
+      <p class="toc-ttl">目次</p>
+      <ol id="tocList"></ol>
+    </nav>
+  </aside>
+  <!-- ▲ 左レールここまで ▲ -->
 
   <section class="blog_detail_main">
     <div class="inner">
@@ -542,6 +589,19 @@ blog-1121 リライト記事ドラフト v1（2026-08-15作成）
       </div><!-- /.blog_detail_main_body -->
     </div><!-- /.inner -->
   </section><!-- /.blog_detail_main -->
+
+  <!-- ▼ 右レール: 追従CTA（パターン6・PCサイド固定カード） ▼ -->
+  <aside class="cta-rail" aria-label="お問い合わせ">
+    <div class="cta-sticky">
+      <p class="t">第4回申請は<br>9月16日〜10月2日</p>
+      <p class="d">準備が間に合うか、いまの状況に合わせて無料でご相談いただけます。</p>
+      <a class="p" href="https://www.3benefits.jp/inquiry/">無料で相談する</a>
+      <a class="o" href="https://www.3benefits.jp/subsidy/">申請サポートの詳細</a>
+      <p class="micro">「申請代行」ではなく申請サポートとして対応します</p>
+    </div>
+  </aside>
+  <!-- ▲ 右レールここまで ▲ -->
+
 </div><!-- /.blog_detail_body_wrap -->
 </main>
 
@@ -614,6 +674,60 @@ blog-1121 リライト記事ドラフト v1（2026-08-15作成）
 </div>
 </footer>
 <!-- ============ フッターここまで ============ -->
+
+<!-- ▼ モバイル: 下部固定CTAバー（パターン6） ▼ -->
+<nav class="cta-bottombar" id="ctaBar" aria-label="無料相談">
+  <a class="o" href="https://www.3benefits.jp/subsidy/">サポート詳細</a>
+  <a class="p" href="https://www.3benefits.jp/inquiry/">無料で相談する</a>
+</nav>
+<!-- ▲ 下部固定CTAバーここまで ▲ -->
+
+<script>
+(function () {
+  // 目次: 本文h2から自動生成
+  var body = document.querySelector('.blog_detail_main_body');
+  var list = document.getElementById('tocList');
+  var headings = [];
+  if (body && list) {
+    headings = Array.prototype.slice.call(body.querySelectorAll('h2'));
+    headings.forEach(function (h, i) {
+      if (!h.id) { h.id = 'sec-' + (i + 1); }
+      var li = document.createElement('li');
+      var a = document.createElement('a');
+      a.href = '#' + h.id;
+      a.textContent = h.textContent.trim();
+      li.appendChild(a);
+      list.appendChild(li);
+    });
+
+    // 現在地ハイライト
+    var links = list.querySelectorAll('a');
+    var setActive = function (id) {
+      links.forEach(function (a) {
+        a.classList.toggle('is-active', a.getAttribute('href') === '#' + id);
+      });
+    };
+    if ('IntersectionObserver' in window) {
+      var current = null;
+      var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) {
+          if (e.isIntersecting) { current = e.target.id; }
+        });
+        if (current) { setActive(current); }
+      }, { rootMargin: '-130px 0px -60% 0px', threshold: 0 });
+      headings.forEach(function (h) { io.observe(h); });
+    }
+  }
+
+  // モバイル下部バー: 一定スクロールで表示
+  var bar = document.getElementById('ctaBar');
+  if (bar) {
+    window.addEventListener('scroll', function () {
+      if (window.scrollY > 300) { bar.classList.add('show'); } else { bar.classList.remove('show'); }
+    }, { passive: true });
+  }
+})();
+</script>
 
 <script type="application/ld+json">
 {
